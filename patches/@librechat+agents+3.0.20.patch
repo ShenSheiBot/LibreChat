@@ -1,0 +1,88 @@
+diff --git a/node_modules/@librechat/agents/dist/cjs/llm/google/utils/common.cjs b/node_modules/@librechat/agents/dist/cjs/llm/google/utils/common.cjs
+index 450e0d6..dbd9aa5 100644
+--- a/node_modules/@librechat/agents/dist/cjs/llm/google/utils/common.cjs
++++ b/node_modules/@librechat/agents/dist/cjs/llm/google/utils/common.cjs
+@@ -330,11 +330,20 @@ function convertMessageContentToParts(message, isMultimodalModel, previousMessag
+     }
+     if (messages.isAIMessage(message) && message.tool_calls?.length != null) {
+         functionCalls = message.tool_calls.map((tc) => {
++            const functionCall = {
++                name: tc.name,
++                args: tc.args,
++            };
++            // Preserve thought_signature for Gemini 3+ models
++            // Gemini 3 requires this field to be echoed back when sending tool results
++            if ('thoughtSignature' in tc) {
++                functionCall.thoughtSignature = tc.thoughtSignature;
++            }
++            else if ('thought_signature' in tc) {
++                functionCall.thoughtSignature = tc.thought_signature;
++            }
+             return {
+-                functionCall: {
+-                    name: tc.name,
+-                    args: tc.args,
+-                },
++                functionCall,
+             };
+         });
+     }
+diff --git a/node_modules/@librechat/agents/dist/esm/llm/google/utils/common.mjs b/node_modules/@librechat/agents/dist/esm/llm/google/utils/common.mjs
+index 02305d8..19ac461 100644
+--- a/node_modules/@librechat/agents/dist/esm/llm/google/utils/common.mjs
++++ b/node_modules/@librechat/agents/dist/esm/llm/google/utils/common.mjs
+@@ -328,11 +328,20 @@ function convertMessageContentToParts(message, isMultimodalModel, previousMessag
+     }
+     if (isAIMessage(message) && message.tool_calls?.length != null) {
+         functionCalls = message.tool_calls.map((tc) => {
++            const functionCall = {
++                name: tc.name,
++                args: tc.args,
++            };
++            // Preserve thought_signature for Gemini 3+ models
++            // Gemini 3 requires this field to be echoed back when sending tool results
++            if ('thoughtSignature' in tc) {
++                functionCall.thoughtSignature = tc.thoughtSignature;
++            }
++            else if ('thought_signature' in tc) {
++                functionCall.thoughtSignature = tc.thought_signature;
++            }
+             return {
+-                functionCall: {
+-                    name: tc.name,
+-                    args: tc.args,
+-                },
++                functionCall,
+             };
+         });
+     }
+diff --git a/node_modules/@librechat/agents/src/llm/google/utils/common.ts b/node_modules/@librechat/agents/src/llm/google/utils/common.ts
+index ccf070c..2017504 100644
+--- a/node_modules/@librechat/agents/src/llm/google/utils/common.ts
++++ b/node_modules/@librechat/agents/src/llm/google/utils/common.ts
+@@ -411,11 +411,21 @@ export function convertMessageContentToParts(
+ 
+   if (isAIMessage(message) && message.tool_calls?.length != null) {
+     functionCalls = message.tool_calls.map((tc) => {
++      const functionCall: any = {
++        name: tc.name,
++        args: tc.args,
++      };
++
++      // Preserve thought_signature for Gemini 3+ models
++      // Gemini 3 requires this field to be echoed back when sending tool results
++      if ('thoughtSignature' in tc) {
++        functionCall.thoughtSignature = (tc as any).thoughtSignature;
++      } else if ('thought_signature' in tc) {
++        functionCall.thoughtSignature = (tc as any).thought_signature;
++      }
++
+       return {
+-        functionCall: {
+-          name: tc.name,
+-          args: tc.args,
+-        },
++        functionCall,
+       };
+     });
+   }
